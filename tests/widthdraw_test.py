@@ -125,12 +125,29 @@ class WidthdrawTest(unittest.TestCase):
         self.assertIn("not authorize to debit money", error_message)
     
     def test_valid_value(self):
-        self.widthdraw_page.enter_account("139498")
-        self.widthdraw_page.enter_amount("5")
-        self.widthdraw_page.enter_description("Test")
+        # Nhập các giá trị vào form
+        account = "139498"
+        amount = "5"
+        description = "Test"
+        
+        self.widthdraw_page.enter_account(account)
+        self.widthdraw_page.enter_amount(amount)
+        self.widthdraw_page.enter_description(description)
         self.widthdraw_page.click_submit()
+        
+        # Kiểm tra thông báo thành công
         success_message = self.widthdraw_page.get_error_message(self.widthdraw_page.heading_successfully) 
         self.assertIn("details of Withdrawal", success_message)
+        
+        # Kiểm tra các giá trị đã nhập có hiển thị trên trang hay không
+        displayed_account = self.widthdraw_page.get_displayed_value("account")
+        displayed_amount = self.widthdraw_page.get_displayed_value("amount")
+        displayed_description = self.widthdraw_page.get_displayed_value("description")
+        
+        self.assertEqual(account, displayed_account, "value not found!")
+        self.assertEqual(amount, displayed_amount, "value not found!")
+        self.assertEqual(description, displayed_description, "value not found!")
+
         
     def test_reset(self):
         self.widthdraw_page.enter_account("139498")

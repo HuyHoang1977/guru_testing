@@ -51,3 +51,20 @@ class WidthdrawPage:
 
     def get_error_message(self, field_error_locator):
         return self.driver.find_element(*field_error_locator).text
+    
+    def get_displayed_value(self, field_name):
+        # Ánh xạ tên trường với vị trí dòng trong bảng
+        field_to_row = {
+            "account": 1,
+            "amount": 2,
+            "description": 3
+        }
+        
+        # Lấy số dòng dựa trên tên trường và tạo XPath tương ứng
+        row = field_to_row.get(field_name.lower())
+        if row is None:
+            raise ValueError(f"Trường '{field_name}' không hợp lệ.")
+        
+        # Tìm và trả về giá trị trong cột thứ hai của dòng được chỉ định
+        return self.driver.find_element_by_xpath(f"//table//tr[{row}]/td[2]").text
+

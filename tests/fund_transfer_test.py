@@ -154,13 +154,34 @@ class FundTransferTest(unittest.TestCase):
         self.assertIn("not authorize", error_message)
     
     def test_valid_fund_transfer(self):
-        self.fund_transfer_page.enter_payer_account("139498")
-        self.fund_transfer_page.enter_payee_account("139497")
-        self.fund_transfer_page.enter_amount("5")
-        self.fund_transfer_page.enter_description("Test")
+        # Nhập các giá trị vào form
+        payer_account = "139498"
+        payee_account = "139497"
+        amount = "5"
+        description = "Test"
+        
+        self.fund_transfer_page.enter_payer_account(payer_account)
+        self.fund_transfer_page.enter_payee_account(payee_account)
+        self.fund_transfer_page.enter_amount(amount)
+        self.fund_transfer_page.enter_description(description)
         self.fund_transfer_page.click_submit()
+        
+        # Kiểm tra thông báo thành công
         success_message = self.fund_transfer_page.get_error_message(self.fund_transfer_page.heading_successfully) 
         self.assertIn("Details", success_message)
+        
+        # Kiểm tra các giá trị đã nhập có hiển thị trên trang hay không
+        displayed_payer_account = self.fund_transfer_page.get_displayed_value("payer_account")
+        displayed_payee_account = self.fund_transfer_page.get_displayed_value("payee_account")
+        displayed_amount = self.fund_transfer_page.get_displayed_value("amount")
+        displayed_description = self.fund_transfer_page.get_displayed_value("description")
+        
+        # Kiểm tra các giá trị
+        self.assertEqual(payer_account, displayed_payer_account, "value not found!")
+        self.assertEqual(payee_account, displayed_payee_account, "value not found!")
+        self.assertEqual(amount, displayed_amount, "value not found!")
+        self.assertEqual(description, displayed_description, "value not found!")
+
         
     def test_reset(self):
         self.fund_transfer_page.enter_payer_account("139498")
