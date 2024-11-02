@@ -1,0 +1,5 @@
+httpcore
+pytest
+selenium
+webdriver_manager
+pytest-html

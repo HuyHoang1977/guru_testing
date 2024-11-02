@@ -9,7 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sys
-sys.path.insert(1, 'D://Subject//Testing//testing_assignment//pages')
+sys.path.insert(1, 'D:\Code\Py\guru_testing\pages')
 from deposit import DepositPage
 
 @pytest.fixture()
