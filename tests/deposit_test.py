@@ -1,151 +1,169 @@
-from httpcore import TimeoutException
-import pytest
-import time
+import os
+import unittest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 import sys
-sys.path.insert(1, 'D:\Code\Py\guru_testing\pages')
-from deposit import DepositPage
+import time
 
-@pytest.fixture()
-def driver():
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-    driver.implicitly_wait(10)
-    yield driver
-    driver.close()
-    driver.quit()
-    
-# TC1: Account No không để trống
-def test_invalid_account_no(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    accountno_input = driver.find_element(*deposit_page.accountno_textbox)
-    accountno_input.click()
+# Thêm đường dẫn đến new_account_page
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'pages')))
+from new_account_page import NewAccountPage
+from login_page import LoginPage
+from deposit_page import DepositPage
 
-    accountno_input.send_keys(Keys.TAB)
-
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message2").text
-    assert "Account Number must not be blank" in error_message
-    
-#  TC2: "Account No" không có kí tự chữ
-def test_characters_in_account_no(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_accountno("abc")
-    
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message2").text
-    assert "Characters are not allowed" in error_message
-    
-# TC3: "Account No" không có kí tự đặc biệt
-def test_special_characters_in_account_no(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_accountno("<")
-    
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message2").text
-    assert "Special characters are not allowed" in error_message
-    
-# TC4: "Account No" hợp lệ
-def test_valid_account_no(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_accountno("139408")
-    deposit_page.enter_amount(Keys.TAB)
-    
-    message = driver.find_element(By.ID, "message2").text
-    assert "" in message
-
-# TC5: Amount không để trống
-def test_invalid_amount(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_amount(Keys.TAB)
-    
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message1").text
-    assert "Amount field must not be blank" in error_message
-
-# TC 6: "Amount" không có kí tự chữ
-def test_characters_in_amount(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_amount("abc")
-    
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message1").text
-    assert "Characters are not allowed" in error_message
-    
-# TC 7: "Amount" không có kí tự đặc biệt
-def test_special_characters_in_amount(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_amount("<")
-    
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message1").text
-    assert "Special characters are not allowed" in error_message
-
-# TC 8: "Amount" hợp lệ
-def test_valid_amount(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_amount("10")
-    deposit_page.enter_amount(Keys.TAB)
-    
-    message = driver.find_element(By.ID, "message1").text
-    assert "" in message
-
-# TC 9: Description không để trống
-def test_invalid_description(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_description(Keys.TAB)
-    
-    # Hiện thị lỗi
-    error_message = driver.find_element(By.ID, "message17").text
-    assert "Description can not be blank" in error_message
-
-# TC 10: Submit thành công
-def test_submit_deposit(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_accountno("139408")
-    deposit_page.enter_amount("10")
-    deposit_page.enter_description("Test")
-    deposit_page.click_submit()
-    try:
+class DepositTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.driver = webdriver.Chrome()
+        cls.login_page = LoginPage(cls.driver)
+        cls.login_page.open_page("https://www.demo.guru99.com/V4/")
+        cls.login_page.enter_username("mngr596391")
+        cls.login_page.enter_password("punybYz")
+        cls.login_page.click_login()
+        time.sleep(1)
+        cls.deposit_page = DepositPage(cls.driver)
+        cls.deposit_page.open_page("DepositInput.php")
+        time.sleep(1)
         
-        # Wait for the success message to appear
-        success_message = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//p[contains(text(), 'Transaction details of Deposit')]"))
-        )
-        assert "Transaction details of Deposit" in success_message.text, "Deposit failed."
-    except TimeoutException:
-        pytest.fail("No success message displayed after submission.")
-
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
         
-# TC 11: Người dùng có thể Reset
-def test_reset(driver):
-    deposit_page = DepositPage(driver)
-    deposit_page.open_page("https://www.demo.guru99.com/V4/manager/DepositInput.php")
-    deposit_page.enter_accountno("139408")
-    deposit_page.enter_amount("10")
-    deposit_page.enter_description("Test")
-    deposit_page.click_reset()
+    def get_alert_text(self):
+        try:
+            # Kiểm tra nếu có alert
+            time.sleep(2)
+            self.driver.implicitly_wait(1)  # Thay vì WebDriverWait
+            alert = self.driver.switch_to.alert
+            alert_text = alert.text
+            alert.accept()  # Đóng alert sau khi lấy thông báo
+            return alert_text
+        except Exception as e:
+            print("Alert không xuất hiện:", e)
+            self.driver.back()  # Quay lại trang trước
+            time.sleep(1)  # Đợi một chút trước khi tải lại trang
+            self.driver.refresh()  # Tải lại trang
+            raise AssertionError("Alert not found")
+        
     
-    # Check fields are cleared
-    accountno_input = driver.find_element(*deposit_page.accountno_textbox)
-    amount_input = driver.find_element(*deposit_page.amount_textbox)
-    description_input = driver.find_element(*deposit_page.description_textbox)
+    def field_must_not_be_blank(self, enter_field_method, error_locator, expected_message):
+        enter_field_method("")
+        self.driver.find_element(*self.deposit_page.amount_textbox).send_keys(Keys.TAB)
+        error_message = self.deposit_page.get_error_message(error_locator)
+        self.assertEqual(error_message, expected_message)
     
-    assert accountno_input.get_attribute("value") == ""
-    assert amount_input.get_attribute("value") == ""
-    assert description_input.get_attribute("value") == ""
+    def field_not_allow_special_characters(self, enter_field_method, error_locator, expected_message):
+        enter_field_method("<")
+        self.driver.find_element(*self.deposit_page.amount_textbox).send_keys(Keys.TAB)
+        error_message = self.deposit_page.get_error_message(error_locator)
+        self.assertIn(error_message, expected_message)
+        
+    def field_not_allow_characters(self, enter_field_method, error_locator, expected_message):
+        enter_field_method("abc") 
+        self.driver.find_element(*self.deposit_page.amount_textbox).send_keys(Keys.TAB)
+        error_message = self.deposit_page.get_error_message(error_locator)
+        self.assertIn(error_message, expected_message)
+    
+    def field_not_allow_space_characters(self, enter_field_method, error_locator, expected_message):
+        enter_field_method(" ")
+        self.driver.find_element(*self.deposit_page.amount_textbox).send_keys(Keys.TAB)
+        error_message = self.deposit_page.get_error_message(error_locator)
+        self.assertIn(error_message, expected_message)
+        
+    # TC1: Account No không để trống
+    def test_empty_account_no(self):
+        self.field_must_not_be_blank(
+            self.deposit_page.enter_accountno, 
+            self.deposit_page.accountno_error, 
+            "Account Number must not be blank")
+        
+    # TC2: "Account No" không có kí tự chữ
+    def test_characters_in_account_no(self):
+        self.field_not_allow_characters(
+            self.deposit_page.enter_accountno, 
+            self.deposit_page.accountno_error, 
+            "Characters are not allowed")
+        
+    # TC3: "Account No" không có kí tự đặc biệt
+    def test_special_characters_in_account_no(self):
+        self.field_not_allow_special_characters(
+            self.deposit_page.enter_accountno, 
+            self.deposit_page.accountno_error,
+            "Special characters are not allowed")
+        
+    # TC4: "Account No" hợp lệ
+    def test_valid_account_no(self):
+        self.deposit_page.enter_accountno("139408")
+        
+        message_style = self.driver.find_element(*self.deposit_page.accountno_error).get_attribute("style")
+        self.assertIn("hidden", message_style)
+        
+    # TC5: Amount không để trống
+    def test_empty_amount(self):
+        self.field_must_not_be_blank(
+            self.deposit_page.enter_amount, 
+            self.deposit_page.amount_error, 
+            "Amount field must not be blank")
+    
+    # TC 6: "Amount" không có kí tự chữ
+    def test_characters_in_amount(self):
+        self.field_not_allow_characters(
+            self.deposit_page.enter_amount, 
+            self.deposit_page.amount_error, 
+            "Characters are not allowed")
+        
+    # TC 7: "Amount" không có kí tự đặc biệt
+    def test_special_characters_in_amount(self):
+        self.field_not_allow_special_characters(
+            self.deposit_page.enter_amount, 
+            self.deposit_page.amount_error,
+            "Special characters are not allowed")
+        
+    # TC 8: "Amount" hợp lệ
+    def test_valid_amount(self):
+        self.deposit_page.enter_amount("10")
+        
+        message_style = self.driver.find_element(*self.deposit_page.amount_error).get_attribute("style")
+        self.assertIn("hidden", message_style)
+        
+    # TC 9: Description không để trống
+    def test_empty_description(self):
+        self.field_must_not_be_blank(
+            self.deposit_page.enter_description, 
+            self.deposit_page.description_error, 
+            "Description can not be blank")
+        
+    # TC 10: Submit thành công
+    def test_submit_success(self):
+        self.deposit_page.enter_accountno("139408")
+        self.deposit_page.enter_amount("10")
+        self.deposit_page.enter_description("Test")
+        self.deposit_page.click_submit()
+        
+        message = self.get_alert_text()
+        self.assertIn("Successfully", message)
+        
+        self.driver.back()
+        
+    # TC 11: Người dùng có thể Reset
+    def test_reset(self):
+        self.deposit_page.enter_accountno("139408")
+        self.deposit_page.enter_amount("10")
+        self.deposit_page.enter_description("Test")
+        self.deposit_page.click_reset()
+        
+        account = self.driver.find_element(*self.deposit_page.accountno_textbox)
+        amount = self.driver.find_element(*self.deposit_page.amount_textbox)
+        description = self.driver.find_element(*self.deposit_page.description_textbox)
+        
+        self.assertEqual(account.get_attribute("value"), "")
+        self.assertEqual(amount.get_attribute("value"), "")
+        self.assertEqual(description.get_attribute("value"), "")
+
+    
+        
+    
+        
