@@ -12,6 +12,7 @@ Kiểm thử các chức năng sau:
 - Log out*
 
 *Chức năng có 2 vai trò (manager/customer)
+
 Web kiểm thử: [Guru99Bank](http://www.demo.guru99.com/V4/)
 
 ## Thành viên:

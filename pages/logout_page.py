@@ -9,7 +9,6 @@ class LogoutPage:
         self.driver = driver
 
     def open_page(self, url):
-        # Tìm phần tử có href chứa giá trị `url` và click để mở trang
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//a[contains(@href, '{url}')]"))
         )

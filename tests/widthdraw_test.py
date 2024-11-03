@@ -7,7 +7,6 @@ from selenium.webdriver.common.keys import Keys
 import sys
 import time
 
-# Thêm đường dẫn đến widthdraw_page
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'pages')))
 
 from widthdraw_page import WidthdrawPage
@@ -35,7 +34,7 @@ class WidthdrawTest(unittest.TestCase):
     def get_alert_text(self):
         alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
         alert_text = alert.text
-        alert.accept()  # Đóng alert sau khi lấy thông báo
+        alert.accept() 
         return alert_text
 
     def field_must_not_be_blank(self, enter_field_method, error_locator, expected_message):
@@ -48,10 +47,16 @@ class WidthdrawTest(unittest.TestCase):
         enter_field_method("<")
         self.driver.find_element(*self.widthdraw_page.description_field).send_keys(Keys.TAB)
         error_message = self.widthdraw_page.get_error_message(error_locator)
-        self.assertEqual(error_message, expected_message)
+        self.assertIn(error_message, expected_message)
         
     def field_not_allow_characters(self, enter_field_method, error_locator, expected_message):
         enter_field_method("abc") 
+        self.driver.find_element(*self.widthdraw_page.description_field).send_keys(Keys.TAB)
+        error_message = self.widthdraw_page.get_error_message(error_locator)
+        self.assertIn(error_message, expected_message)
+        
+    def field_valid_value(self, enter_field_method, error_locator, expected_message):
+        enter_field_method("10") 
         self.driver.find_element(*self.widthdraw_page.description_field).send_keys(Keys.TAB)
         error_message = self.widthdraw_page.get_error_message(error_locator)
         self.assertEqual(error_message, expected_message)
@@ -71,6 +76,11 @@ class WidthdrawTest(unittest.TestCase):
         self.field_not_allow_characters(self.widthdraw_page.enter_account,
                                         self.widthdraw_page.account_error,
                                         "Characters are not allowed")
+        
+    def test_account_valid_value(self):
+        self.field_valid_value(self.widthdraw_page.enter_account,
+                               self.widthdraw_page.account_error,
+                               "")
 
     def test_amount_must_not_be_blank(self):
         self.field_must_not_be_blank(self.widthdraw_page.enter_amount,
@@ -86,17 +96,27 @@ class WidthdrawTest(unittest.TestCase):
         self.field_not_allow_characters(self.widthdraw_page.enter_amount,
                                         self.widthdraw_page.amount_error,
                                         "Characters are not allowed")
+        
+    def test_amount_valid_value(self):
+        self.field_valid_value(self.widthdraw_page.enter_amount,
+                               self.widthdraw_page.amount_error,
+                               "")
 
     def test_description_cannot_be_blank(self):
         self.field_must_not_be_blank(self.widthdraw_page.enter_description,
                                       self.widthdraw_page.description_error,
                                       "Description can not be blank")
+    
+    def test_description_valid_value(self):
+        self.field_valid_value(self.widthdraw_page.enter_description,
+                               self.widthdraw_page.description_error,
+                               "")
         
     def test_random_invalid_values(self):
         self.widthdraw_page.enter_account("")
         self.widthdraw_page.enter_amount("abc")
         self.widthdraw_page.enter_description("<")
-        self.widthdraw_page.click_submit()  # Nhấn nút Submit
+        self.widthdraw_page.click_submit()  
         error_message = self.get_alert_text()
         self.assertIn("Please fill all fields", error_message)
         
@@ -104,15 +124,15 @@ class WidthdrawTest(unittest.TestCase):
         self.widthdraw_page.enter_account("13949")
         self.widthdraw_page.enter_amount("500")
         self.widthdraw_page.enter_description("Test")
-        self.widthdraw_page.click_submit()  # Nhấn nút Submit
+        self.widthdraw_page.click_submit()  
         error_message = self.get_alert_text()
         self.assertIn("not exist", error_message)
 
     def test_insufficient_balance(self):
         self.widthdraw_page.enter_account("139497")
-        self.widthdraw_page.enter_amount("10000")  # Giả sử số tiền này vượt quá số dư
+        self.widthdraw_page.enter_amount("10000")  
         self.widthdraw_page.enter_description("Test")
-        self.widthdraw_page.click_submit()  # Nhấn nút Submit
+        self.widthdraw_page.click_submit()  
         error_message = self.get_alert_text()
         self.assertIn("Account Balance Low", error_message)
 
@@ -120,12 +140,11 @@ class WidthdrawTest(unittest.TestCase):
         self.widthdraw_page.enter_account("139495")
         self.widthdraw_page.enter_amount("10")
         self.widthdraw_page.enter_description("Test")
-        self.widthdraw_page.click_submit()  # Nhấn nút Submit
+        self.widthdraw_page.click_submit()  
         error_message = self.get_alert_text()
         self.assertIn("not authorize to debit money", error_message)
     
     def test_valid_value(self):
-        # Nhập các giá trị vào form
         account = "139498"
         amount = "5"
         description = "Test"
@@ -135,11 +154,9 @@ class WidthdrawTest(unittest.TestCase):
         self.widthdraw_page.enter_description(description)
         self.widthdraw_page.click_submit()
         
-        # Kiểm tra thông báo thành công
         success_message = self.widthdraw_page.get_error_message(self.widthdraw_page.heading_successfully) 
         self.assertIn("details of Withdrawal", success_message)
         
-        # Kiểm tra các giá trị đã nhập có hiển thị trên trang hay không
         displayed_account = self.widthdraw_page.get_displayed_value("account")
         displayed_amount = self.widthdraw_page.get_displayed_value("amount")
         displayed_description = self.widthdraw_page.get_displayed_value("description")

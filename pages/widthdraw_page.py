@@ -15,14 +15,12 @@ class WidthdrawPage:
         self.submit_button = (By.NAME, "AccSubmit")
         self.reset_button = (By.NAME, "res")
         
-        # Locators for error messages (these IDs may vary depending on actual implementation)
         self.heading_successfully = (By.CLASS_NAME, "heading3")
         self.account_error = (By.ID, "message2")
         self.amount_error = (By.ID, "message1")
         self.description_error = (By.ID, "message17")
 
     def open_page(self, url):
-        # Tìm phần tử có href chứa giá trị `url` và click để mở trang
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//a[contains(@href, '{url}')]"))
         )
@@ -53,18 +51,15 @@ class WidthdrawPage:
         return self.driver.find_element(*field_error_locator).text
     
     def get_displayed_value(self, field_name):
-        # Ánh xạ tên trường với vị trí dòng trong bảng
         field_to_row = {
             "account": 1,
             "amount": 2,
             "description": 3
         }
         
-        # Lấy số dòng dựa trên tên trường và tạo XPath tương ứng
         row = field_to_row.get(field_name.lower())
         if row is None:
-            raise ValueError(f"Trường '{field_name}' không hợp lệ.")
+            raise ValueError(f"field '{field_name}' invalid.")
         
-        # Tìm và trả về giá trị trong cột thứ hai của dòng được chỉ định
         return self.driver.find_element_by_xpath(f"//table//tr[{row}]/td[2]").text
 
